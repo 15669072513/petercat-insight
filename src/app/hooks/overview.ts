@@ -63,7 +63,7 @@ async function getCommitCount(owner: string, repo: string): Promise<number> {
             const { data: commits, headers } = await octokit.rest.repos.listCommits({
                 owner,
                 repo,
-                per_page: 100,
+                per_page: 500,
                 page,
             });
 
