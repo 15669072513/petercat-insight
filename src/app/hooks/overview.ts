@@ -58,7 +58,7 @@ async function getCommitCount(owner: string, repo: string): Promise<number> {
     try {
         while (true) {
             // 等待 100ms，防止被 GitHub 限流
-            // await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise(resolve => setTimeout(resolve, 10));
 
             const { data: commits, headers } = await octokit.rest.repos.listCommits({
                 owner,
