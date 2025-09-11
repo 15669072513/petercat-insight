@@ -56,30 +56,26 @@ function InsightContent() {
 
 return (
         <div className="flex w-full h-full flex-col bg-[#F3F4F6] min-h-screen">
-            <div className="relative flex h-[72px] w-full items-center justify-between gap-2  px-6 flex-shrink-0">
-                <div className="flex items-center gap-2">
-          <span
-              className="flex items-center gap-2 cursor-pointer"
-              // onClick={(e) => {
-              //   e.preventDefault();
-              //   window.history.back();
-              // }}
-          >
-            <HomeIcon />
-            <span className="text-gray-400">{botName}</span>
-          </span>
-                    <span className="text-gray-400">/</span>
-                    <span>Insight</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    Powered by
-                    <a
-                        className="text-gray-500"
-                        href="https://open-digger.cn/docs/user_docs/intro"
-                    >
-                        HyperCRX
-                    </a>
-                </div>
+            <div className="relative flex h-[20px] w-full items-center justify-between gap-2  px-3 flex-shrink-0">
+          {/*      <div className="flex items-center gap-2">*/}
+          {/*<span*/}
+          {/*    className="flex items-center gap-2 cursor-pointer"*/}
+          {/*>*/}
+          {/*  <HomeIcon />*/}
+          {/*  <span className="text-gray-400">{botName}</span>*/}
+          {/*</span>*/}
+          {/*          <span className="text-gray-400">/</span>*/}
+          {/*          <span>Insight</span>*/}
+          {/*      </div>*/}
+          {/*      <div className="flex items-center gap-2 text-gray-400 text-sm">*/}
+          {/*          Powered by*/}
+          {/*          <a*/}
+          {/*              className="text-gray-500"*/}
+          {/*              href="https://open-digger.cn/docs/user_docs/intro"*/}
+          {/*          >*/}
+          {/*              HyperCRX*/}
+          {/*          </a>*/}
+          {/*      </div>*/}
             </div>
 
             <div className="pb-[42px] px-[40px] overflow-y-auto">
