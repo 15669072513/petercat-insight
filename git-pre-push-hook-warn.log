@@ -1,0 +1,28 @@
+风险内容位置：
+    CommitId: 863f0945ad37ad17c2a89b52dac8518165d2262a
+    文件名：src/app/page.tsx
+    文件行：59~78
+风险内容：
+                <div className="relative flex h-[20px] w-full items-center justify-between gap-2  px-3 flex-shrink-0">
+              {/*      <div className="flex items-center gap-2">*/}
+              {/*<span*/}
+              {/*    className="flex items-center gap-2 cursor-pointer"*/}
+              {/*>*/}
+              {/*  <HomeIcon />*/}
+              {/*  <span className="text-gray-400">{botName}</span>*/}
+              {/*</span>*/}
+              {/*          <span className="text-gray-400">/</span>*/}
+              {/*          <span>Insight</span>*/}
+              {/*      </div>*/}
+              {/*      <div className="flex items-center gap-2 text-gray-400 text-sm">*/}
+              {/*          Powered by*/}
+              {/*          <a*/}
+              {/*              className="text-gray-500"*/}
+              {/*              href="https://open-digger.cn/docs/user_docs/intro"*/}
+              {/*          >*/}
+              {/*              HyperCRX*/}
+              {/*          </a>*/}
+              {/*      </div>*/}
+风险细节：
+    敏感类型：URL地址(url)
+    敏感细节：{hitWord=https://open-digger.cn/docs/user_docs/intro}
