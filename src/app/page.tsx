@@ -1,6 +1,5 @@
 'use client';
 import React, { Suspense } from 'react';
-import HomeIcon from './public/icons/HomeIcon';
 import AreaChart from './AreaChart/index';
 import LineChart from './LineChart/index';
 import Heatmap from './Heatmap/index';
@@ -20,7 +19,7 @@ import {
     useActivityDatesAndTimes,
     useContributorStatistics,
     useOverview,
-} from './hooks/useInsight';
+} from './hooks/useInsight_py';
 
 // 加载状态组件
 const Loading = () => (
