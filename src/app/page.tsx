@@ -1,103 +1,191 @@
-import Image from "next/image";
+'use client';
+import React, { Suspense } from 'react';
+import HomeIcon from './public/icons/HomeIcon';
+import AreaChart from './AreaChart/index';
+import LineChart from './LineChart/index';
+import Heatmap from './Heatmap/index';
+import BoxChart from './BoxChart/index';
+import RankChart from './RankChart/index';
+import ChartHeader from './ChartHeader/index';
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { useSearchParams } from 'next/navigation';
+import { Spinner } from '@nextui-org/react';
+import GitInsightIcon from './components/GitInsightIcon';
+import {
+    useIssueStatistics,
+    useIssueResolutionDuration,
+    usePrStatistics,
+    useCodeFrequency,
+    useActivityStatistics,
+    useActivityDatesAndTimes,
+    useContributorStatistics,
+    useOverview,
+} from './hooks/useInsight';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+// 加载状态组件
+const Loading = () => (
+    <div className="flex items-center justify-center h-[100%] w-[100%]">
+        <Spinner size="lg" />
     </div>
-  );
+);
+
+export default function Insight() {
+
+    return (
+        <Suspense fallback={<Loading />}>
+            <InsightContent  />
+        </Suspense>
+    );
+}
+
+// 将实际逻辑放在另一个组件中，避免在顶层直接使用异步 hook
+function InsightContent() {
+
+    const searchParams = useSearchParams();
+    const repoName = searchParams.get('repo') || '';
+    const botName = searchParams.get('name') || '';
+
+    const { data: issueStatistic } = useIssueStatistics(repoName);
+    const { data: issueResolutionDuration } = useIssueResolutionDuration(repoName);
+    const { data: prStatistic } = usePrStatistics(repoName);
+    const { data: codeFrequency } = useCodeFrequency(repoName);
+    const { data: activityStatistics } = useActivityStatistics(repoName);
+    const { data: activityDatesAndTimes } = useActivityDatesAndTimes(repoName);
+    const { data: contributors } = useContributorStatistics(repoName);
+    const { data: overview } = useOverview(repoName);
+
+return (
+        <div className="flex w-full h-full flex-col bg-[#F3F4F6] min-h-screen">
+            <div className="relative flex h-[72px] w-full items-center justify-between gap-2  px-6 flex-shrink-0">
+                <div className="flex items-center gap-2">
+          <span
+              className="flex items-center gap-2 cursor-pointer"
+              // onClick={(e) => {
+              //   e.preventDefault();
+              //   window.history.back();
+              // }}
+          >
+            <HomeIcon />
+            <span className="text-gray-400">{botName}</span>
+          </span>
+                    <span className="text-gray-400">/</span>
+                    <span>Insight</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    Powered by
+                    <a
+                        className="text-gray-500"
+                        href="https://open-digger.cn/docs/user_docs/intro"
+                    >
+                        HyperCRX
+                    </a>
+                </div>
+            </div>
+
+            <div className="pb-[42px] px-[40px] overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded h-[92px] p-[24px] flex col-span-2">
+                        <div className="mt-[6px] w-[280px]">
+                            <ChartHeader title="Overview" />
+                        </div>
+
+                        <div className="flex items-center justify-center w-full ">
+                            <div className="flex-1 flex justify-center items-center">
+                                <GitInsightIcon type="star" />
+                                <div className="text-gray-800 font-[510] mx-[12px]">Stars</div>
+                                <div className="text-gray-400">{overview?.stars}</div>
+                            </div>
+                            <div className="flex-1 flex justify-center items-center">
+                                <GitInsightIcon type="fork" />
+                                <div className="text-gray-800 font-[510] mx-[12px]">Forks</div>
+                                <div className="text-gray-400">{overview?.forks}</div>
+                            </div>
+                            <div className="flex-1 flex justify-center items-center">
+                                <GitInsightIcon type="commit" />
+                                <div className="text-gray-800 font-[510] mx-[12px]">
+                                    Commits
+                                </div>
+                                <div className="text-gray-400">{overview?.commits}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white rounded h-[607px] p-[24px]">
+                        {contributors ? (
+                            <AreaChart
+                                data={contributors}
+                                height={500}
+                                title="Contributors"
+                            />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+                    <div className="bg-white rounded h-[607px] p-[24px]">
+                        {codeFrequency ? (
+                            <AreaChart
+                                data={codeFrequency}
+                                height={500}
+                                title="Code Frequency"
+                            />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+                    <div className="bg-white rounded h-[579px] p-[24px]">
+                        {prStatistic ? (
+                            <LineChart data={prStatistic} height={450} title="PR History" />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+                    <div className="bg-white rounded h-[579px] p-[24px]">
+                        {issueStatistic ? (
+                            <LineChart
+                                data={issueStatistic}
+                                height={450}
+                                colors={['#14B8A6', '#D946EF', '#F59E0B']}
+                                title="Issue History"
+                            />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+                    <div className="bg-white rounded h-[400px] p-[24px]">
+                        {issueResolutionDuration ? (
+                            <BoxChart
+                                data={issueResolutionDuration}
+                                height={300}
+                                title="Average Time To Issue Close"
+                            />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+                    <div className="bg-white rounded h-[400px] p-[24px]">
+                        {activityDatesAndTimes ? (
+                            <Heatmap
+                                data={activityDatesAndTimes}
+                                height={300}
+                                title="Repository Activity"
+                            />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+
+                    <div className="bg-white rounded h-[500px] col-span-2 p-[24px]">
+                        {activityStatistics ? (
+                            <RankChart
+                                data={activityStatistics}
+                                height={408}
+                                title="Contributor Rankings Top 10"
+                            />
+                        ) : (
+                            <Loading />
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
