@@ -5,9 +5,9 @@ const nextConfig: NextConfig = {
 };
 
 // next.config.js
-module.exports = {
-    output: 'export',
-};
+// module.exports = {
+//     output: 'export',
+// };
 
 
 export default nextConfig;
