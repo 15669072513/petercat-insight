@@ -24,6 +24,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app,
                 host="0.0.0.0",
-                port=8001,
-                ssl_certfile="/usr/local/openresty/nginx/conf/certs/mosn-chain-2024.crt",
-                ssl_keyfile="/usr/local/openresty/nginx/conf/certs/mosn-2024.key")
+                port=8001
+                # ssl_certfile="/usr/local/openresty/nginx/conf/certs/mosn-chain-2024.crt",
+                # ssl_keyfile="/usr/local/openresty/nginx/conf/certs/mosn-2024.key"
+                )
