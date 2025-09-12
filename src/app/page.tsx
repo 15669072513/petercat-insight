@@ -54,8 +54,8 @@ function InsightContent() {
     const { data: overview } = useOverview(repoName);
 
 return (
-        <div className="flex w-full h-full flex-col bg-[#F3F4F6] min-h-screen">
-            <div className="relative flex h-[20px] w-full items-center justify-between gap-2  px-3 flex-shrink-0">
+        <div className="flex w-full h-full flex-col bg-[#F3F4F6] min-h-screen px-0 gap-0">
+            <div className="relative flex h-[15px] w-full items-center justify-between gap-2  px-1 flex-shrink-0">
           {/*      <div className="flex items-center gap-2">*/}
           {/*<span*/}
           {/*    className="flex items-center gap-2 cursor-pointer"*/}
@@ -77,7 +77,7 @@ return (
           {/*      </div>*/}
             </div>
 
-            <div className="pb-[42px] px-[40px] overflow-y-auto">
+            <div className="pb-[42px] px-[15px] overflow-y-auto">
                 <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white rounded h-[92px] p-[24px] flex col-span-2">
                         <div className="mt-[6px] w-[280px]">
