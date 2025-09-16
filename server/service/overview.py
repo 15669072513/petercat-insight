@@ -3,6 +3,7 @@ from typing import Optional
 from github import Github
 # 使用环境变量存储 token
 TOKEN = os.getenv("GITHUB_TOKEN")  # 设置环境变量: export GITHUB_TOKEN=ghp_xxx...
+print(f"Using token: {TOKEN}")
 g = Github(TOKEN) if TOKEN else Github()  # 有 token 就用，没有就匿名（不推荐生产使用）
 
 
