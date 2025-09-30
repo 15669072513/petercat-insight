@@ -190,7 +190,8 @@ def get_clomonitor_lint(gitUrl: str):
             "--mode", MODE,
             "--url", gitUrl,
             "--path", target_path,
-            "--check-set", CHECK_SET
+            "--check-set", CHECK_SET,
+            "--format", "json"
         ]
         
         # 执行clomonitor命令
