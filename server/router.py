@@ -1,4 +1,6 @@
 import json
+import subprocess
+import os
 from fastapi import APIRouter
 from service.activity import get_active_dates_and_times, get_activity_data
 from service.contributor import get_contributor_data
@@ -117,3 +119,118 @@ def get_overview_data(repo_name: str):
 
     except Exception as e:
         return json.dumps({"success": False, "message": str(e)})
+
+
+@router.get("/clomonitor/lint")
+def get_clomonitor_lint(gitUrl: str):
+    try:
+        # 配置参数
+        LINTER_EXECUTABLE = "/root/clomonitor/clomonitor-linter-nightly-musl"
+        MODE = "mix"
+        CHECK_SET = "ant-incubator"
+        CLONE_BASE_DIR = "/root/clomonitor_tmp"
+        GIT_TIMEOUT = 300  # 5分钟git clone超时
+        LINTER_TIMEOUT = 300  # 5分钟linter超时
+        
+        # 从URL中提取仓库名称
+        try:
+            # 处理https://github.com/owner/repo格式
+            path_parts = gitUrl.replace('https://github.com/', '').split('/')
+            if len(path_parts) >= 2:
+                repo = path_parts[1]
+                # 去掉可能的查询参数或片段标识符
+                repo = repo.split('?')[0].split('#')[0]
+                repo_name = repo
+            else:
+                raise ValueError("无效的GitHub URL格式")
+        except Exception as e:
+            raise ValueError(f"URL解析失败: {str(e)}")
+        
+        # 创建目标路径
+        target_path = os.path.join(CLONE_BASE_DIR, repo_name)
+        
+        # 确保基础目录存在
+        os.makedirs(CLONE_BASE_DIR, exist_ok=True)
+        
+        # 如果目录已存在，先删除
+        if os.path.exists(target_path):
+            import shutil
+            shutil.rmtree(target_path)
+        
+        # git clone命令
+        git_cmd = [
+            "git", 
+            "clone", 
+            gitUrl, 
+            target_path
+        ]
+        
+        # 执行git clone
+        git_result = subprocess.run(
+            git_cmd,
+            capture_output=True,
+            text=True,
+            timeout=GIT_TIMEOUT
+        )
+        
+        if git_result.returncode != 0:
+            return {
+                "success": False,
+                "message": f"Git clone失败，返回码: {git_result.returncode}",
+                "data": {
+                    "stdout": git_result.stdout,
+                    "stderr": git_result.stderr,
+                    "return_code": git_result.returncode
+                }
+            }
+        
+        # 构造clomonitor命令
+        linter_cmd = [
+            LINTER_EXECUTABLE,
+            "--mode", MODE,
+            "--url", gitUrl,
+            "--path", target_path,
+            "--check-set", CHECK_SET
+        ]
+        
+        # 执行clomonitor命令
+        linter_result = subprocess.run(
+            linter_cmd,
+            capture_output=True,
+            text=True,
+            timeout=LINTER_TIMEOUT
+        )
+        
+        # 检查结果
+        if linter_result.returncode == 0:
+            return {
+                "success": True,
+                "data": {
+                    "stdout": linter_result.stdout,
+                    "stderr": linter_result.stderr,
+                    "return_code": linter_result.returncode,
+                    "cloned_path": target_path
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"clomonitor命令执行失败，返回码: {linter_result.returncode}",
+                "data": {
+                    "stdout": linter_result.stdout,
+                    "stderr": linter_result.stderr,
+                    "return_code": linter_result.returncode,
+                    "cloned_path": target_path
+                }
+            }
+                
+    except subprocess.TimeoutExpired as e:
+        return {
+            "success": False,
+            "message": f"{'Git clone' if 'git' in str(e.cmd) else 'clomonitor'}超时（超过5分钟）"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
