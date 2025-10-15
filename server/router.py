@@ -134,6 +134,7 @@ def get_clomonitor_lint(gitUrl: str):
         # 从URL中提取仓库名称
         try:
             # 处理https://github.com/owner/repo格式
+            gitUrl = gitUrl.replace('.git', '')
             path_parts = gitUrl.replace('https://github.com/', '').replace('.git', '').split('/')
             if len(path_parts) >= 2:
                 repo = path_parts[1]
@@ -184,7 +185,6 @@ def get_clomonitor_lint(gitUrl: str):
             }
 
         # 构造clomonitor命令
-        gitUrl = gitUrl.replace('.git', '')
         linter_cmd = [
             LINTER_EXECUTABLE,
             "--mode", MODE,
