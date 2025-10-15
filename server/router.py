@@ -8,7 +8,6 @@ from service.issue import get_issue_data, get_issue_resolution_duration
 from service.overview import get_overview
 from service.pr import get_code_frequency, get_pr_data
 
-
 # ref: https://open-digger.cn/en/docs/user_docs/metrics/metrics_usage_guide
 router = APIRouter(
     prefix="/api/insight",
@@ -131,12 +130,11 @@ def get_clomonitor_lint(gitUrl: str):
         CLONE_BASE_DIR = "/root/clomonitor_tmp"
         GIT_TIMEOUT = 300  # 5分钟git clone超时
         LINTER_TIMEOUT = 300  # 5分钟linter超时
-        
+
         # 从URL中提取仓库名称
         try:
             # 处理https://github.com/owner/repo格式
-            gitUrl = gitUrl.replace('.git','')
-            path_parts = gitUrl.replace('https://github.com/', '').replace('.git','').split('/')
+            path_parts = gitUrl.replace('https://github.com/', '').replace('.git', '').split('/')
             if len(path_parts) >= 2:
                 repo = path_parts[1]
                 # 去掉可能的查询参数或片段标识符
@@ -146,26 +144,26 @@ def get_clomonitor_lint(gitUrl: str):
                 raise ValueError("无效的GitHub URL格式")
         except Exception as e:
             raise ValueError(f"URL解析失败: {str(e)}")
-        
+
         # 创建目标路径
         target_path = os.path.join(CLONE_BASE_DIR, repo_name)
-        
+
         # 确保基础目录存在
         os.makedirs(CLONE_BASE_DIR, exist_ok=True)
-        
+
         # 如果目录已存在，先删除
         if os.path.exists(target_path):
             import shutil
             shutil.rmtree(target_path)
-        
+
         # git clone命令
         git_cmd = [
-            "git", 
-            "clone", 
-            gitUrl, 
+            "git",
+            "clone",
+            gitUrl,
             target_path
         ]
-        
+
         # 执行git clone
         git_result = subprocess.run(
             git_cmd,
@@ -173,7 +171,7 @@ def get_clomonitor_lint(gitUrl: str):
             text=True,
             timeout=GIT_TIMEOUT
         )
-        
+
         if git_result.returncode != 0:
             return {
                 "success": False,
@@ -184,8 +182,9 @@ def get_clomonitor_lint(gitUrl: str):
                     "return_code": git_result.returncode
                 }
             }
-        
+
         # 构造clomonitor命令
+        gitUrl = gitUrl.replace('.git', '')
         linter_cmd = [
             LINTER_EXECUTABLE,
             "--mode", MODE,
@@ -194,7 +193,7 @@ def get_clomonitor_lint(gitUrl: str):
             "--check-set", CHECK_SET,
             "--format", "json"
         ]
-        
+
         # 执行clomonitor命令
         linter_result = subprocess.run(
             linter_cmd,
@@ -202,7 +201,7 @@ def get_clomonitor_lint(gitUrl: str):
             text=True,
             timeout=LINTER_TIMEOUT
         )
-        
+
         # 检查结果
         if linter_result.returncode == 0:
             return {
@@ -225,7 +224,7 @@ def get_clomonitor_lint(gitUrl: str):
                     "cloned_path": target_path
                 }
             }
-                
+
     except subprocess.TimeoutExpired as e:
         return {
             "success": False,
