@@ -123,11 +123,11 @@ def get_overview_data(repo_name: str):
 @router.get("/ck/getData")
 def getData(sql: str):
     client = ClickHouseClient(
-        host=os.getenv('CLICKHOUSE_HOST', 'localhost'),
+        host='clickhouse.open-digger.cn',
         port=int(os.getenv('CLICKHOUSE_PORT', 8123)),
-        username=os.getenv('CLICKHOUSE_USER'),
-        password=os.getenv('CLICKHOUSE_PASSWORD'),
-        database=os.getenv('CLICKHOUSE_DB', 'default')
+        username='antgroup',
+        password='G7f$K9@qL1x!',
+        database='opensource'
     )
     try:
 

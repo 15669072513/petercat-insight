@@ -20,7 +20,6 @@ class ClickHouseClient:
         self.database = database
         self.client = None
         self._create_client()
-        logging.log(f"🔧 ClickHouse 客户端初始化完成: {self.host}:{self.port} {self.database} {self.username} {self.password}")
 
     def _create_client(self):
         """创建客户端连接"""
@@ -67,11 +66,11 @@ class ClickHouseClient:
 # 示例调用
 if __name__ == '__main__':
     client = ClickHouseClient(
-        host=os.getenv('CLICKHOUSE_HOST', 'localhost'),
+        host='clickhouse.open-digger.cn',
         port=int(os.getenv('CLICKHOUSE_PORT', 8123)),
-        username=os.getenv('CLICKHOUSE_USER'),
-        password=os.getenv('CLICKHOUSE_PASSWORD'),
-        database=os.getenv('CLICKHOUSE_DB', 'default')
+        username='antgroup',
+        password='G7f$K9@qL1x!',
+        database='opensource'
     )
 
     sql = "SELECT name, value FROM system.settings WHERE name LIKE 'max_%' LIMIT 5"
