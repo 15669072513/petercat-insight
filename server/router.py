@@ -3,6 +3,7 @@ import subprocess
 import os
 from fastapi import APIRouter
 from service.activity import get_active_dates_and_times, get_activity_data
+from service.clickhouse import ClickHouseClient
 from service.contributor import get_contributor_data
 from service.issue import get_issue_data, get_issue_resolution_duration
 from service.overview import get_overview
@@ -118,6 +119,28 @@ def get_overview_data(repo_name: str):
 
     except Exception as e:
         return json.dumps({"success": False, "message": str(e)})
+
+@router.get("/ck/getData")
+def getData(sql: str):
+    client = ClickHouseClient(
+        host=os.getenv('CLICKHOUSE_HOST', 'localhost'),
+        port=int(os.getenv('CLICKHOUSE_PORT', 8123)),
+        username=os.getenv('CLICKHOUSE_USER'),
+        password=os.getenv('CLICKHOUSE_PASSWORD'),
+        database=os.getenv('CLICKHOUSE_DB', 'default')
+    )
+    try:
+
+        data = client.query(sql)
+        return {
+            "success": True,
+            "data": data
+        }
+    except Exception as e:
+        return json.dumps({"success": False, "message": str(e)})
+    finally:
+        client.close()
+
 
 
 @router.get("/clomonitor/lint")
