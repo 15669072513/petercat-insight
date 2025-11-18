@@ -1,3 +1,5 @@
+import logging
+
 import clickhouse_connect
 import os
 
@@ -18,7 +20,7 @@ class ClickHouseClient:
         self.database = database
         self.client = None
         self._create_client()
-        print(f"🔧 ClickHouse 客户端初始化完成: {self.host}:{self.port} {self.database} {self.username} {self.password}")
+        logging.log(f"🔧 ClickHouse 客户端初始化完成: {self.host}:{self.port} {self.database} {self.username} {self.password}")
 
     def _create_client(self):
         """创建客户端连接"""
