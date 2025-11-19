@@ -1,4 +1,5 @@
 import json
+import logging
 import subprocess
 import os
 from fastapi import APIRouter
@@ -130,7 +131,7 @@ def getData(sql: str):
         database='opensource'
     )
     try:
-
+        logging.info(f"sql: {sql}")
         data = client.query(sql)
         return {
             "success": True,
