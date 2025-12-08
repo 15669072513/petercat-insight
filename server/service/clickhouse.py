@@ -66,7 +66,7 @@ class ClickHouseClient:
     def _get_from_cache(self, cache_key: str) -> Optional[list]:
         """从缓存获取数据"""
         if self._is_cache_valid(cache_key):
-            logging.info(f"🎯 缓存命中: {cache_key[:8]}...")
+            print(f"🎯 缓存命中: {cache_key[:8]}...")
             return self._cache[cache_key]['data']
         return None
 
@@ -76,12 +76,12 @@ class ClickHouseClient:
             'data': data,
             'timestamp': time.time()
         }
-        logging.info(f"💾 缓存设置: {cache_key[:8]}...")
+        print(f"💾 缓存设置: {cache_key[:8]}...")
 
     def clear_cache(self):
         """清空缓存"""
         self._cache.clear()
-        logging.info("🗑️ 缓存已清空")
+        print("🗑️ 缓存已清空")
 
     def get_cache_stats(self) -> dict:
         """获取缓存统计信息"""
