@@ -1,10 +1,12 @@
-import logging
 import time
 import hashlib
-import json
 from typing import Dict, Any, Optional
 import clickhouse_connect
 import os
+
+# 全局缓存变量
+_global_cache: Dict[str, Dict[str, Any]] = {}
+_global_cache_expiry = 30 * 60  # 30分钟（秒）
 
 class ClickHouseClient:
     def __init__(self, host='localhost', port=8123, username=None, password=None, database='default'):
@@ -23,10 +25,6 @@ class ClickHouseClient:
         self.database = database
         self.client = None
         self._create_client()
-        
-        # 缓存相关
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._cache_expiry = 30 * 60  # 30分钟（秒）
 
     def _create_client(self):
         """创建客户端连接"""
@@ -49,16 +47,16 @@ class ClickHouseClient:
 
     def _is_cache_valid(self, cache_key: str) -> bool:
         """检查缓存是否有效"""
-        if cache_key not in self._cache:
+        if cache_key not in _global_cache:
             return False
         
-        cache_data = self._cache[cache_key]
+        cache_data = _global_cache[cache_key]
         current_time = time.time()
         
         # 检查是否过期
-        if current_time - cache_data['timestamp'] > self._cache_expiry:
+        if current_time - cache_data['timestamp'] > _global_cache_expiry:
             # 过期，删除缓存
-            del self._cache[cache_key]
+            del _global_cache[cache_key]
             return False
         
         return True
@@ -67,12 +65,12 @@ class ClickHouseClient:
         """从缓存获取数据"""
         if self._is_cache_valid(cache_key):
             print(f"🎯 缓存命中: {cache_key[:8]}...")
-            return self._cache[cache_key]['data']
+            return _global_cache[cache_key]['data']
         return None
 
     def _set_cache(self, cache_key: str, data: list):
         """设置缓存"""
-        self._cache[cache_key] = {
+        _global_cache[cache_key] = {
             'data': data,
             'timestamp': time.time()
         }
@@ -80,26 +78,26 @@ class ClickHouseClient:
 
     def clear_cache(self):
         """清空缓存"""
-        self._cache.clear()
+        _global_cache.clear()
         print("🗑️ 缓存已清空")
 
     def get_cache_stats(self) -> dict:
         """获取缓存统计信息"""
-        total_cached = len(self._cache)
+        total_cached = len(_global_cache)
         current_time = time.time()
         
         # 计算即将过期的缓存数量（5分钟内）
         expiring_soon = 0
-        for cache_data in self._cache.values():
-            time_left = self._cache_expiry - (current_time - cache_data['timestamp'])
+        for cache_data in _global_cache.values():
+            time_left = _global_cache_expiry - (current_time - cache_data['timestamp'])
             if time_left < 5 * 60:  # 5分钟内过期
                 expiring_soon += 1
         
         return {
             'total_cached_queries': total_cached,
-            'cache_expiry_minutes': self._cache_expiry / 60,
+            'cache_expiry_minutes': _global_cache_expiry / 60,
             'expiring_soon_count': expiring_soon,
-            'cache_keys': list(self._cache.keys())[:10]  # 只显示前10个缓存键
+            'cache_keys': list(_global_cache.keys())[:10]  # 只显示前10个缓存键
         }
 
     def query(self, sql):
