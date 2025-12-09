@@ -133,8 +133,9 @@ def getData(sql: str):
         database='opensource'
     )
     try:
-        logging.info(f"sql: {sql}")
+        print(f"sql: {sql}")
         data = client.query(sql)
+        print(f"data: {data}")
         return {
             "success": True,
             "data": data
