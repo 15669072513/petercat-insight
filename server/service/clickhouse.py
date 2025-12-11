@@ -82,7 +82,7 @@ class ClickHouseClient:
     def _get_from_cache(self, cache_key: str) -> Optional[list]:
         """从缓存获取数据"""
         if self._is_cache_valid(cache_key):
-            print(f"🎯 缓存命中: {cache_key[:8]}...")
+            print(f"🎯 缓存命中: {cache_key}")
             return _global_cache[cache_key]['data']
         return None
 
@@ -92,7 +92,7 @@ class ClickHouseClient:
             'data': data,
             'timestamp': time.time()
         }
-        print(f"💾 缓存设置: {cache_key[:8]}...")
+        print(f"💾 缓存设置: {cache_key}")
 
     def clear_cache(self):
         """清空缓存"""
@@ -129,9 +129,10 @@ class ClickHouseClient:
             'cache_keys': list(_global_cache.keys())[:10]  # 只显示前10个缓存键
         }
 
-    def query(self, sql):
+    def query(self, sql, reqType):
         """
         执行 SQL 查询，返回 list of dict
+        :param reqType:
         :param sql: 要执行的 SQL 语句
         :return: list[dict] 每一行作为一个字典
         """
@@ -139,14 +140,14 @@ class ClickHouseClient:
             raise RuntimeError("❌ ClickHouse 客户端未初始化")
 
         # 生成缓存键
-        cache_key = self._generate_cache_key(sql)
-        
+
         # 尝试从缓存获取
-        cached_data = self._get_from_cache(cache_key)
+        cached_data = self._get_from_cache(reqType)
         if cached_data is not None:
             return cached_data
 
         try:
+            print(f"🔍 执行 SQL:{reqType}")
             result = self.client.query(sql)
             rows = []
             # 获取列名
@@ -157,7 +158,7 @@ class ClickHouseClient:
                 rows.append(row_dict)
             
             # 设置缓存
-            self._set_cache(cache_key, rows)
+            self._set_cache(reqType, rows)
             return rows
         except Exception as e:
             raise RuntimeError(f"❌ SQL 执行失败: {e}")
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     print("=== 第一次查询（将访问数据库并缓存结果）===")
     try:
         start_time = time.time()
-        data = client.query(sql)
+        data = client.query(sql, "a———aa")
         query_time = time.time() - start_time
         print(f"⏱️  查询耗时: {query_time:.3f}秒")
         print(f"📊 返回结果: {len(data)} 条记录")
@@ -199,7 +200,7 @@ if __name__ == '__main__':
     print("\n=== 第二次查询（将使用缓存）===")
     try:
         start_time = time.time()
-        data = client.query(sql)
+        data = client.query(sql, "aa_bb")
         query_time = time.time() - start_time
         print(f"⏱️  查询耗时: {query_time:.3f}秒")
         print(f"📊 返回结果: {len(data)} 条记录")

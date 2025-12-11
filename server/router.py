@@ -123,7 +123,7 @@ def get_overview_data(repo_name: str):
 
 
 @router.get("/ck/getData")
-def getData(sql: str):
+def getData(sql: str,reqType: str):
     # 使用单例模式，确保只有一个 ClickHouseClient 实例
     client = ClickHouseClient(
         host='clickhouse.open-digger.cn',
@@ -133,9 +133,9 @@ def getData(sql: str):
         database='opensource'
     )
     try:
-        print(f"sql: {sql}")
-        data = client.query(sql)
-        print(f"data: {data}")
+        data = client.query(sql, reqType)
+        print(f"reqType: {reqType}")
+        print(f"data: {data[0] if len(data) > 0 else '空数据'}")
         return {
             "success": True,
             "data": data
