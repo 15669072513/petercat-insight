@@ -9,15 +9,6 @@ _global_cache: Dict[str, Dict[str, Any]] = {}
 _global_cache_expiry = 30 * 60  # 30分钟（秒）
 
 class ClickHouseClient:
-    _instance = None
-    _client = None
-    _initialized = False
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(ClickHouseClient, cls).__new__(cls)
-        return cls._instance
-
     def __init__(self, host='localhost', port=8123, username=None, password=None, database='default'):
         """
         初始化 ClickHouse 客户端
@@ -27,9 +18,6 @@ class ClickHouseClient:
         :param password: 密码
         :param database: 数据库名
         """
-        if self._initialized:
-            return
-            
         self.host = host
         self.port = port
         self.username = username
@@ -37,23 +25,17 @@ class ClickHouseClient:
         self.database = database
         self.client = None
         self._create_client()
-        self._initialized = True
 
     def _create_client(self):
         """创建客户端连接"""
-        if ClickHouseClient._client is not None:
-            self.client = ClickHouseClient._client
-            return
-            
         try:
-            ClickHouseClient._client = clickhouse_connect.get_client(
+            self.client = clickhouse_connect.get_client(
                 host=self.host,
                 port=self.port,
                 username=self.username,
                 password=self.password,
                 database=self.database
             )
-            self.client = ClickHouseClient._client
             print("✅ 成功连接到 ClickHouse")
         except Exception as e:
             raise ConnectionError(f"❌ 连接 ClickHouse 失败: {e}")
@@ -100,15 +82,10 @@ class ClickHouseClient:
         print("🗑️ 缓存已清空")
 
     @classmethod
-    def reset_instance(cls):
-        """重置单例实例，用于测试或重新初始化"""
-        if cls._client:
-            cls._client.close()
-        cls._instance = None
-        cls._client = None
-        cls._initialized = False
+    def clear_global_cache(cls):
+        """清空全局缓存"""
         _global_cache.clear()
-        print("🔄 ClickHouseClient 单例已重置")
+        print("🗑️ 全局缓存已清空")
 
     def get_cache_stats(self) -> dict:
         """获取缓存统计信息"""
@@ -164,12 +141,10 @@ class ClickHouseClient:
             raise RuntimeError(f"❌ SQL 执行失败: {e}")
 
     def close(self):
-        """关闭连接（可选，适用于长连接管理）"""
-        if ClickHouseClient._client:
-            ClickHouseClient._client.close()
-            ClickHouseClient._client = None
+        """关闭连接"""
+        if self.client:
+            self.client.close()
             self.client = None
-            self._initialized = False
             print("🔌 ClickHouse 连接已关闭")
 
 

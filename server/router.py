@@ -1,5 +1,4 @@
 import json
-import logging
 import subprocess
 import os
 from fastapi import APIRouter
@@ -124,7 +123,7 @@ def get_overview_data(repo_name: str):
 
 @router.get("/ck/getData")
 def getData(sql: str,reqType: str):
-    # 使用单例模式，确保只有一个 ClickHouseClient 实例
+    # 创建 ClickHouseClient 实例
     client = ClickHouseClient(
         host='clickhouse.open-digger.cn',
         port=int(os.getenv('CLICKHOUSE_PORT', 8123)),
@@ -142,7 +141,9 @@ def getData(sql: str,reqType: str):
         }
     except Exception as e:
         return json.dumps({"success": False, "message": str(e)})
-    # 单例模式下不需要关闭连接，因为要共享缓存和连接
+    finally:
+        # 关闭连接
+        client.close()
 
 
 
