@@ -109,14 +109,28 @@ class ClickHouseClient:
     def query(self, sql, reqType):
         """
         执行 SQL 查询，返回 list of dict
-        :param reqType:
+        :param reqType: 如果为 'None' 则不走缓存，直接查询
         :param sql: 要执行的 SQL 语句
         :return: list[dict] 每一行作为一个字典
         """
         if not self.client:
             raise RuntimeError("❌ ClickHouse 客户端未初始化")
 
-        # 生成缓存键
+        # 如果 reqType 为 'None'，直接查询数据库，不走缓存
+        if reqType == 'None':
+            try:
+                print(f"🔍 执行 SQL（不走缓存）:{reqType}")
+                result = self.client.query(sql)
+                rows = []
+                # 获取列名
+                columns = result.column_names
+                # 遍历数据行
+                for row in result.result_set:
+                    row_dict = dict(zip(columns, row))
+                    rows.append(row_dict)
+                return rows
+            except Exception as e:
+                raise RuntimeError(f"❌ SQL 执行失败: {e}")
 
         # 尝试从缓存获取
         cached_data = self._get_from_cache(reqType)
@@ -133,7 +147,7 @@ class ClickHouseClient:
             for row in result.result_set:
                 row_dict = dict(zip(columns, row))
                 rows.append(row_dict)
-            
+
             # 设置缓存
             self._set_cache(reqType, rows)
             return rows
