@@ -148,6 +148,61 @@ def getData(sql: str,reqType: str):
 
 
 
+@router.get("/clomonitor")
+def get_clomonitor(gitUrl: str, checkSet: str):
+    try:
+        # 配置参数
+        LINTER_EXECUTABLE = os.path.join(os.path.dirname(__file__), "utils", "clomonitor-linter-centos7-musl")
+        CHECK_SET = checkSet
+
+        # 执行clomonitor命令
+        linter_cmd = [
+            LINTER_EXECUTABLE,
+            "--url", gitUrl,
+            "--check-set", CHECK_SET,
+            "--format", "json"
+        ]
+
+        # 执行命令，设置超时
+        result = subprocess.run(
+            linter_cmd,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5分钟超时
+        )
+
+        if result.returncode == 0:
+            return {
+                "success": True,
+                "data": {
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "return_code": result.returncode
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"clomonitor命令执行失败，返回码: {result.returncode}",
+                "data": {
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "return_code": result.returncode
+                }
+            }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "message": "clomonitor执行超时（超过5分钟）"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
 @router.get("/clomonitor/lint")
 def get_clomonitor_lint(gitUrl: str):
     try:
