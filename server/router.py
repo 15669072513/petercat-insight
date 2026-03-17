@@ -161,7 +161,7 @@ def get_clomonitor(gitUrl: str, checkSet: str):
             "--url", gitUrl,
             "--mode", "mix",
             "--check-set", CHECK_SET,
-            "--format", "json"
+            "--format", "json",
             "--path", "/tmp/"
         ]
 
