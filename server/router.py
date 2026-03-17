@@ -255,6 +255,7 @@ def get_clomonitor_lint(gitUrl: str):
             gitUrl,
             target_path
         ]
+        print(f"执行git clone命令: {' '.join(git_cmd)}")
 
         # 执行git clone
         git_result = subprocess.run(
