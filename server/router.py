@@ -246,8 +246,7 @@ def get_clomonitor_lint(gitUrl: str):
                 "data": {
                     "stdout": linter_result.stdout,
                     "stderr": linter_result.stderr,
-                    "return_code": linter_result.returncode,
-                    "cloned_path": target_path
+                    "return_code": linter_result.returncode
                 }
             }
         else:
@@ -257,8 +256,7 @@ def get_clomonitor_lint(gitUrl: str):
                 "data": {
                     "stdout": linter_result.stdout,
                     "stderr": linter_result.stderr,
-                    "return_code": linter_result.returncode,
-                    "cloned_path": target_path
+                    "return_code": linter_result.returncode
                 }
             }
 
