@@ -162,6 +162,7 @@ def get_clomonitor(gitUrl: str, checkSet: str):
             "--mode", "mix",
             "--check-set", CHECK_SET,
             "--format", "json"
+            "--path", "/tmp/clomonitor/"
         ]
 
         # 执行命令，设置超时
