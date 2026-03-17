@@ -210,23 +210,103 @@ def get_clomonitor_lint(gitUrl: str):
     try:
         # 配置参数
         LINTER_EXECUTABLE = "/root/clomonitor/clomonitor-linter-nightly-musl"
+        GIT_TOKEN = os.getenv("GITHUB_TOKEN", "")
+        if not GIT_TOKEN:
+            return {
+                "success": False,
+                "message": "未配置GITHUB_TOKEN环境变量"
+            }
         MODE = "mix"
         CHECK_SET = "ant-incubator"
+        CLONE_BASE_DIR = "/root/clomonitor_tmp"
+        GIT_TIMEOUT = 300  # 5分钟git clone超时
         LINTER_TIMEOUT = 300  # 5分钟linter超时
 
         # 从URL中提取仓库名称
         try:
-            # 处理https://github.com/owner/repo格式
-            gitUrl = gitUrl.replace('.git', '')
+            # 处理https://github.com/owner/repo格式,增加token
+            gitUrl = gitUrl.replace('.git', '').replace('https://', ' https://'+GIT_TOKEN+'@')
+            path_parts = gitUrl.replace('https://github.com/', '').replace('.git', '').split('/')
+            if len(path_parts) >= 2:
+                repo = path_parts[1]
+                # 去掉可能的查询参数或片段标识符
+                repo = repo.split('?')[0].split('#')[0]
+                repo_name = repo
+            else:
+                raise ValueError("无效的GitHub URL格式")
         except Exception as e:
             raise ValueError(f"URL解析失败: {str(e)}")
+
+        # 创建目标路径
+        target_path = os.path.join(CLONE_BASE_DIR, repo_name)
+
+        # 确保基础目录存在
+        os.makedirs(CLONE_BASE_DIR, exist_ok=True)
+
+        # 如果目录已存在，先删除
+        if os.path.exists(target_path):
+            import shutil
+            shutil.rmtree(target_path)
+
+        # git clone命令
+        git_cmd = [
+            "git",
+            "clone",
+            gitUrl,
+            target_path
+        ]
+
+        # 执行git clone
+        git_result = subprocess.run(
+            git_cmd,
+            capture_output=True,
+            text=True,
+            timeout=GIT_TIMEOUT
+        )
+
+        if git_result.returncode != 0:
+            return {
+                "success": False,
+                "message": f"Git clone失败，返回码: {git_result.returncode}",
+                "data": {
+                    "stdout": git_result.stdout,
+                    "stderr": git_result.stderr,
+                    "return_code": git_result.returncode
+                }
+            }
+
+        # 检查clone的目标路径是否存在
+        if not os.path.exists(target_path):
+            return {
+                "success": False,
+                "message": "Git clone失败：目标目录不存在",
+                "data": {
+                    "stdout": git_result.stdout,
+                    "stderr": git_result.stderr,
+                    "return_code": git_result.returncode,
+                    "target_path": target_path
+                }
+            }
+
+        # 检查目标目录是否为空（可能clone了但没有文件）
+        if not os.listdir(target_path):
+            return {
+                "success": False,
+                "message": "Git clone失败：目标目录为空，仓库可能为空或clone不完整",
+                "data": {
+                    "stdout": git_result.stdout,
+                    "stderr": git_result.stderr,
+                    "return_code": git_result.returncode,
+                    "target_path": target_path
+                }
+            }
 
         # 构造clomonitor命令
         linter_cmd = [
             LINTER_EXECUTABLE,
             "--mode", MODE,
             "--url", gitUrl,
-            "--path", "/tmp/",
+            "--path", target_path,
             "--check-set", CHECK_SET,
             "--format", "json"
         ]
