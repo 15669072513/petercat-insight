@@ -159,6 +159,7 @@ def get_clomonitor(gitUrl: str, checkSet: str):
         linter_cmd = [
             LINTER_EXECUTABLE,
             "--url", gitUrl,
+            "--mode", "mix",
             "--check-set", CHECK_SET,
             "--format", "json"
         ]
