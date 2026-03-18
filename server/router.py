@@ -224,20 +224,24 @@ def get_clomonitor_lint(gitUrl: str):
 
         # 从URL中提取仓库名称
         try:
-            # 处理https://github.com/owner/repo格式,增加token
-            gitUrl = gitUrl.replace('.git', '').replace('https://', 'https://'+GIT_TOKEN+'@')
-            path_parts = gitUrl.replace('https://github.com/', '').replace('.git', '').split('/')
+            # 去掉 .git 后缀和 query 参数、fragment
+            clean_url = gitUrl.replace('.git', '').split('?')[0].split('#')[0]
+
+            # 解析出 owner/repo
+            # 处理 https://github.com/owner/repo 格式
+            path_parts = clean_url.replace('https://github.com/', '').split('/')
             if len(path_parts) >= 2:
-                repo = path_parts[1]
-                # 去掉可能的查询参数或片段标识符
-                repo = repo.split('?')[0].split('#')[0]
-                repo_name = repo
+                repo_name = path_parts[0] + '/' + path_parts[1]
             else:
                 raise ValueError("无效的GitHub URL格式")
+
+            # 处理URL，增加token用于git clone
+            gitUrl = gitUrl.replace('.git', '').replace('https://', 'https://'+GIT_TOKEN+'@')
         except Exception as e:
             raise ValueError(f"URL解析失败: {str(e)}")
 
         # 创建目标路径
+        print(f"仓库名称: {repo_name}")
         target_path = os.path.join(CLONE_BASE_DIR, repo_name)
 
         # 确保基础目录存在
