@@ -221,7 +221,7 @@ def get_clomonitor_lint(gitUrl: str):
         CLONE_BASE_DIR = "/root/clomonitor_tmp"
         GIT_TIMEOUT = 300  # 5分钟git clone超时
         LINTER_TIMEOUT = 300  # 5分钟linter超时
-
+        gitTokenUrl = gitUrl.replace('.git', '').replace('https://', 'https://'+GIT_TOKEN+'@')
         # 从URL中提取仓库名称
         try:
             # 去掉 .git 后缀和 query 参数、fragment
@@ -234,9 +234,6 @@ def get_clomonitor_lint(gitUrl: str):
                 repo_name = path_parts[0] + '/' + path_parts[1]
             else:
                 raise ValueError("无效的GitHub URL格式")
-
-            # 处理URL，增加token用于git clone
-            gitUrl = gitUrl.replace('.git', '').replace('https://', 'https://'+GIT_TOKEN+'@')
         except Exception as e:
             raise ValueError(f"URL解析失败: {str(e)}")
 
@@ -256,7 +253,7 @@ def get_clomonitor_lint(gitUrl: str):
         git_cmd = [
             "git",
             "clone",
-            gitUrl,
+            gitTokenUrl,
             target_path
         ]
         print(f"执行git clone命令: {' '.join(git_cmd)}")
@@ -315,7 +312,7 @@ def get_clomonitor_lint(gitUrl: str):
             "--check-set", CHECK_SET,
             "--format", "json"
         ]
-
+        print(f"执行clomonitor命令: {' '.join(linter_cmd)}")
         # 执行clomonitor命令
         linter_result = subprocess.run(
             linter_cmd,
