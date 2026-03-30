@@ -358,6 +358,36 @@ def github_api_adaptor(url: str):
                 "json": data,
                 "cached": False
             }
+        elif response.status_code in (401, 403):
+            # 降级处理：token认证失败或限流，使用匿名方式重新请求
+            print(f"[Fallback] 认证失败/限流，尝试匿名请求: {url}")
+            fallback_response = requests.get(url, timeout=30)
+
+            if fallback_response.ok:
+                data = fallback_response.json()
+                print(f"[Fallback] 匿名请求成功")
+
+                # 存入缓存
+                github_api_cache[url] = {
+                    "data": data,
+                    "expire_time": current_time + GITHUB_API_CACHE_TTL
+                }
+
+                return {
+                    "ok": True,
+                    "json": data,
+                    "cached": False,
+                    "fallback": True
+                }
+            else:
+                return {
+                    "ok": False,
+                    "message": f"GitHub API请求失败，降级匿名请求也失败，状态码: {fallback_response.status_code}",
+                    "json": {
+                        "status_code": fallback_response.status_code,
+                        "text": fallback_response.text
+                    }
+                }
         else:
             return {
                 "ok": False,
