@@ -319,6 +319,7 @@ def github_api_adaptor(url: str):
 
         if response.ok:
             data = response.json()
+            print(f"response.json(): {data}")
             return {
                 "ok": True,
                 "json": data
