@@ -1,6 +1,7 @@
 import json
 import subprocess
 import os
+import time
 import requests
 from fastapi import APIRouter
 from service.activity import get_active_dates_and_times, get_activity_data
@@ -16,6 +17,11 @@ router = APIRouter(
     tags=["insight"],
     responses={404: {"description": "Not found"}},
 )
+
+# GitHub API 缓存：{url: {"data": data, "expire_time": expire_time}}
+# 过期时间3天 = 3 * 24 * 60 * 60 = 259200 秒
+GITHUB_API_CACHE_TTL = 3 * 24 * 60 * 60
+github_api_cache = {}
 
 
 @router.get("/issue/statistics")
@@ -298,7 +304,25 @@ def get_clomonitor_lint(gitUrl: str):
 
 @router.get("/githubApiAdaptor")
 def github_api_adaptor(url: str):
-    """GitHub API 中转接口"""
+    """GitHub API 中转接口（带3天缓存）"""
+    global github_api_cache
+
+    # 检查缓存
+    current_time = time.time()
+    if url in github_api_cache:
+        cache_entry = github_api_cache[url]
+        if current_time < cache_entry["expire_time"]:
+            print(f"[Cache] 命中缓存: {url}")
+            return {
+                "ok": True,
+                "json": cache_entry["data"],
+                "cached": True
+            }
+        else:
+            # 缓存已过期，删除
+            del github_api_cache[url]
+            print(f"[Cache] 缓存已过期: {url}")
+
     try:
         # 获取 GitHub Token
         git_token = os.getenv("GITHUB_TOKEN", "")
@@ -321,9 +345,18 @@ def github_api_adaptor(url: str):
         if response.ok:
             data = response.json()
             print(f"response.json(): {data}")
+
+            # 存入缓存
+            github_api_cache[url] = {
+                "data": data,
+                "expire_time": current_time + GITHUB_API_CACHE_TTL
+            }
+            print(f"[Cache] 已缓存: {url}, 过期时间: {GITHUB_API_CACHE_TTL}秒后")
+
             return {
                 "ok": True,
-                "json": data
+                "json": data,
+                "cached": False
             }
         else:
             return {
