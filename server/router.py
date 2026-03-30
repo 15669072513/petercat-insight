@@ -311,7 +311,7 @@ def github_api_adaptor(url: str):
         # 设置请求头
         headers = {
             "Authorization": f"Bearer {git_token}",
-            "Accept": "application/vnd.github.v3+json"
+            "Accept": "application/json"
         }
 
         # 发起请求
