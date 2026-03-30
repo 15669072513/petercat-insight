@@ -1,6 +1,7 @@
 import json
 import subprocess
 import os
+import requests
 from fastapi import APIRouter
 from service.activity import get_active_dates_and_times, get_activity_data
 from service.clickhouse import ClickHouseClient
@@ -144,65 +145,6 @@ def getData(sql: str,reqType: str):
     finally:
         # 关闭连接
         client.close()
-
-
-
-
-@router.get("/clomonitor")
-def get_clomonitor(gitUrl: str, checkSet: str):
-    try:
-        # 配置参数
-        LINTER_EXECUTABLE = os.path.join(os.path.dirname(__file__), "utils", "clomonitor-linter-centos7-musl")
-        CHECK_SET = checkSet
-
-        # 执行clomonitor命令
-        linter_cmd = [
-            LINTER_EXECUTABLE,
-            "--url", gitUrl,
-            "--mode", "mix",
-            "--check-set", CHECK_SET,
-            "--format", "json",
-            "--path", "/tmp/"
-        ]
-
-        # 执行命令，设置超时
-        result = subprocess.run(
-            linter_cmd,
-            capture_output=True,
-            text=True,
-            timeout=300  # 5分钟超时
-        )
-
-        if result.returncode == 0:
-            return {
-                "success": True,
-                "data": {
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "return_code": result.returncode
-                }
-            }
-        else:
-            return {
-                "success": False,
-                "message": f"clomonitor命令执行失败，返回码: {result.returncode}",
-                "data": {
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "return_code": result.returncode
-                }
-            }
-
-    except subprocess.TimeoutExpired:
-        return {
-            "success": False,
-            "message": "clomonitor执行超时（超过5分钟）"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": str(e)
-        }
 
 
 @router.get("/clomonitor/lint")
@@ -350,5 +292,54 @@ def get_clomonitor_lint(gitUrl: str):
     except Exception as e:
         return {
             "success": False,
+            "message": str(e)
+        }
+
+
+@router.get("/githubApiAdaptor")
+def github_api_adaptor(url: str):
+    """GitHub API 中转接口"""
+    try:
+        # 获取 GitHub Token
+        git_token = os.getenv("GITHUB_TOKEN", "")
+        if not git_token:
+            return {
+                "success": False,
+                "message": "未配置GITHUB_TOKEN环境变量"
+            }
+
+        # 设置请求头
+        headers = {
+            "Authorization": f"Bearer {git_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+
+        # 发起请求
+        response = requests.get(url, headers=headers, timeout=30)
+
+        if response.ok:
+            data = response.json()
+            return {
+                "ok": True,
+                "json": data
+            }
+        else:
+            return {
+                "ok": False,
+                "message": f"GitHub API请求失败，状态码: {response.status_code}",
+                "json": {
+                    "status_code": response.status_code,
+                    "text": response.text
+                }
+            }
+
+    except requests.RequestException as e:
+        return {
+            "ok": False,
+            "message": f"请求异常: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "ok": False,
             "message": str(e)
         }
