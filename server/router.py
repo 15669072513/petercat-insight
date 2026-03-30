@@ -316,6 +316,7 @@ def github_api_adaptor(url: str):
 
         # 发起请求
         response = requests.get(url, headers=headers, timeout=30)
+        print(f"response: {response}")
 
         if response.ok:
             data = response.json()
