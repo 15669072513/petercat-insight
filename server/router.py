@@ -338,6 +338,9 @@ def github_api_adaptor(url: str):
             "Accept": "application/json"
         }
 
+        # 休眠200ms避免限流
+        time.sleep(0.2)
+
         # 发起请求
         response = requests.get(url, headers=headers, timeout=30)
         print(f"response: {response}")
