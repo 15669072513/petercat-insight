@@ -13,7 +13,11 @@ from service.overview import get_overview
 from service.pr import get_code_frequency, get_pr_data
 
 # 加载 .env 文件（指定路径）
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+env_path = os.path.join(os.path.dirname(__file__), ".env")
+print(f"[ENV] .env 文件路径: {env_path}")
+print(f"[ENV] .env 文件是否存在: {os.path.exists(env_path)}")
+load_dotenv(env_path)
+print(f"[ENV] GITHUB_TOKEN = {os.getenv('GITHUB_TOKEN', '未找到')}")
 
 # ref: https://open-digger.cn/en/docs/user_docs/metrics/metrics_usage_guide
 router = APIRouter(
