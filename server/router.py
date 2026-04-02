@@ -12,12 +12,13 @@ from service.issue import get_issue_data, get_issue_resolution_duration
 from service.overview import get_overview
 from service.pr import get_code_frequency, get_pr_data
 
+GITHUB_TOKEN = ""
 # 加载 .env 文件（指定路径）
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 print(f"[ENV] .env 文件路径: {env_path}")
 print(f"[ENV] .env 文件是否存在: {os.path.exists(env_path)}")
 load_dotenv(env_path)
-print(f"[ENV] GITHUB_TOKEN = {os.getenv('GITHUB_TOKEN', '未找到')}")
+print(f"[ENV] GITHUB_TOKEN = {os.getenv('GITHUB_TOKEN', '未找到')},const token:{GITHUB_TOKEN}")
 
 # ref: https://open-digger.cn/en/docs/user_docs/metrics/metrics_usage_guide
 router = APIRouter(
@@ -166,7 +167,7 @@ def get_clomonitor_lint(gitUrl: str):
     try:
         # 配置参数
         LINTER_EXECUTABLE = "/root/clomonitor/clomonitor-linter-nightly-musl"
-        GIT_TOKEN = os.getenv("GITHUB_TOKEN", "")
+        GIT_TOKEN = GITHUB_TOKEN
         if not GIT_TOKEN:
             return {
                 "success": False,
@@ -333,7 +334,7 @@ def github_api_adaptor(url: str):
 
     try:
         # 获取 GitHub Token
-        git_token = os.getenv("GITHUB_TOKEN", "")
+        git_token = GITHUB_TOKEN
         if not git_token:
             return {
                 "success": False,
