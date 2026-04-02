@@ -353,11 +353,9 @@ def github_api_adaptor(url: str):
 
         # 发起请求
         response = requests.get(url, headers=headers, timeout=30)
-        print(f"response: {response.text},token:{git_token},header:{headers}")
 
         if response.ok:
             data = response.json()
-            print(f"response.json(): {data}")
 
             # 存入缓存
             github_api_cache[url] = {
