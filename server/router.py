@@ -12,7 +12,9 @@ from service.issue import get_issue_data, get_issue_resolution_duration
 from service.overview import get_overview
 from service.pr import get_code_frequency, get_pr_data
 
-load_dotenv()
+# 加载 .env 文件（指定路径）
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
 # ref: https://open-digger.cn/en/docs/user_docs/metrics/metrics_usage_guide
 router = APIRouter(
     prefix="/api/insight",
