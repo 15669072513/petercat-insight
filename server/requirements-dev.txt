@@ -3,4 +3,4 @@ pytest
 pytest-asyncio
 twine
 clickhouse_connect
-
+python-dotenv

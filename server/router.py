@@ -3,6 +3,7 @@ import subprocess
 import os
 import time
 import requests
+from dotenv import load_dotenv
 from fastapi import APIRouter
 from service.activity import get_active_dates_and_times, get_activity_data
 from service.clickhouse import ClickHouseClient
@@ -11,6 +12,7 @@ from service.issue import get_issue_data, get_issue_resolution_duration
 from service.overview import get_overview
 from service.pr import get_code_frequency, get_pr_data
 
+load_dotenv()
 # ref: https://open-digger.cn/en/docs/user_docs/metrics/metrics_usage_guide
 router = APIRouter(
     prefix="/api/insight",
