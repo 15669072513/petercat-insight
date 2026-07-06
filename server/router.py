@@ -33,6 +33,16 @@ GITHUB_API_CACHE_TTL = 3 * 24 * 60 * 60
 github_api_cache = {}
 
 
+# ClickHouse 客户端全局单例
+ck_client = ClickHouseClient(
+    host='clickhouse.open-digger.cn',
+    port=int(os.getenv('CLICKHOUSE_PORT', 8123)),
+    username='antgroup',
+    password='G7f$K9@qL1x!',
+    database='opensource'
+)
+
+
 @router.get("/issue/statistics")
 def get_issue_insight(repo_name: str):
     try:
@@ -139,16 +149,8 @@ def get_overview_data(repo_name: str):
 
 @router.get("/ck/getData")
 def getData(sql: str,reqType: str):
-    # 创建 ClickHouseClient 实例
-    client = ClickHouseClient(
-        host='clickhouse.open-digger.cn',
-        port=int(os.getenv('CLICKHOUSE_PORT', 8123)),
-        username='antgroup',
-        password='G7f$K9@qL1x!',
-        database='opensource'
-    )
     try:
-        data = client.query(sql, reqType)
+        data = ck_client.query(sql, reqType)
         print(f"reqType: {reqType}")
         print(f"data: {data[0] if len(data) > 0 else '空数据'}")
         return {
@@ -157,9 +159,6 @@ def getData(sql: str,reqType: str):
         }
     except Exception as e:
         return json.dumps({"success": False, "message": str(e)})
-    finally:
-        # 关闭连接
-        client.close()
 
 
 @router.get("/clomonitor/lint")

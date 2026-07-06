@@ -6,18 +6,29 @@ import os
 
 # 全局缓存变量
 _global_cache: Dict[str, Dict[str, Any]] = {}
-_global_cache_expiry = 30 * 60  # 30分钟（秒）
+_global_cache_expiry = 24 * 60 * 60  # 24小时（秒）
 
 class ClickHouseClient:
+    _instance = None
+    _init_flag = False
+
+    def __new__(cls, host='localhost', port=8123, username=None, password=None, database='default'):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, host='localhost', port=8123, username=None, password=None, database='default'):
         """
-        初始化 ClickHouse 客户端
+        初始化 ClickHouse 客户端（单例模式，只初始化一次）
         :param host: ClickHouse 服务器地址
         :param port: 端口（默认 HTTP 8123）
         :param username: 用户名
         :param password: 密码
         :param database: 数据库名
         """
+        if ClickHouseClient._init_flag:
+            return
+        ClickHouseClient._init_flag = True
         self.host = host
         self.port = port
         self.username = username
@@ -119,7 +130,7 @@ class ClickHouseClient:
         # 如果 reqType 为 'None'，直接查询数据库，不走缓存
         if reqType == 'None':
             try:
-                print(f"🔍 执行 SQL（不走缓存）:{reqType}")
+                print(f"🔍 执行 SQL（不走缓存）:{sql[:100]}")
                 result = self.client.query(sql)
                 rows = []
                 # 获取列名
@@ -132,13 +143,16 @@ class ClickHouseClient:
             except Exception as e:
                 raise RuntimeError(f"❌ SQL 执行失败: {e}")
 
+        # 使用 SQL 哈希作为缓存键，确保相同 SQL 命中同一缓存
+        cache_key = self._generate_cache_key(sql)
+
         # 尝试从缓存获取
-        cached_data = self._get_from_cache(reqType)
+        cached_data = self._get_from_cache(cache_key)
         if cached_data is not None:
             return cached_data
 
         try:
-            print(f"🔍 执行 SQL:{reqType}")
+            print(f"🔍 执行 SQL（缓存键: {cache_key}）:{sql[:100]}")
             result = self.client.query(sql)
             rows = []
             # 获取列名
@@ -149,7 +163,7 @@ class ClickHouseClient:
                 rows.append(row_dict)
 
             # 设置缓存
-            self._set_cache(reqType, rows)
+            self._set_cache(cache_key, rows)
             return rows
         except Exception as e:
             raise RuntimeError(f"❌ SQL 执行失败: {e}")
