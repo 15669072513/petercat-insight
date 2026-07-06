@@ -1,4 +1,5 @@
 import time
+import hashlib
 from typing import Dict, Any, Optional
 import clickhouse_connect
 import os
@@ -110,29 +111,19 @@ class ClickHouseClient:
         if not self.client:
             raise RuntimeError("❌ ClickHouse 客户端未初始化")
 
-        # 如果 reqType 为 'None'，直接查询数据库，不走缓存
+        # 如果 reqType 为 'None'，使用 SQL 哈希作为缓存键
         if reqType == 'None':
-            try:
-                print(f"🔍 执行 SQL（不走缓存）:{reqType}")
-                result = self.client.query(sql)
-                rows = []
-                # 获取列名
-                columns = result.column_names
-                # 遍历数据行
-                for row in result.result_set:
-                    row_dict = dict(zip(columns, row))
-                    rows.append(row_dict)
-                return rows
-            except Exception as e:
-                raise RuntimeError(f"❌ SQL 执行失败: {e}")
+            cache_key = hashlib.md5(sql.encode('utf-8')).hexdigest()
+        else:
+            cache_key = reqType
 
         # 尝试从缓存获取
-        cached_data = self._get_from_cache(reqType)
+        cached_data = self._get_from_cache(cache_key)
         if cached_data is not None:
             return cached_data
 
         try:
-            print(f"🔍 执行 SQL:{reqType}")
+            print(f"🔍 执行 SQL:{cache_key}")
             result = self.client.query(sql)
             rows = []
             # 获取列名
@@ -143,7 +134,7 @@ class ClickHouseClient:
                 rows.append(row_dict)
 
             # 设置缓存
-            self._set_cache(reqType, rows)
+            self._set_cache(cache_key, rows)
             return rows
         except Exception as e:
             raise RuntimeError(f"❌ SQL 执行失败: {e}")
