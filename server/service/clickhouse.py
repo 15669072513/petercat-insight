@@ -23,20 +23,18 @@ class ClickHouseClient:
         self.username = username
         self.password = password
         self.database = database
-        self.client = None
-        self._create_client()
 
     def _create_client(self):
         """创建客户端连接"""
         try:
-            self.client = clickhouse_connect.get_client(
+            client = clickhouse_connect.get_client(
                 host=self.host,
                 port=self.port,
                 username=self.username,
                 password=self.password,
                 database=self.database
             )
-            print("✅ 成功连接到 ClickHouse")
+            return client
         except Exception as e:
             raise ConnectionError(f"❌ 连接 ClickHouse 失败: {e}")
 
@@ -108,8 +106,6 @@ class ClickHouseClient:
         :param sql: 要执行的 SQL 语句
         :return: list[dict] 每一行作为一个字典
         """
-        if not self.client:
-            raise RuntimeError("❌ ClickHouse 客户端未初始化")
 
         # 如果 reqType 为 'None'，使用 SQL 哈希作为缓存键
         if reqType == 'None':
@@ -122,9 +118,11 @@ class ClickHouseClient:
         if cached_data is not None:
             return cached_data
 
+        # 每次查询创建独立连接，避免并发 session 冲突
+        client = self._create_client()
         try:
             print(f"🔍 执行 SQL:{cache_key}")
-            result = self.client.query(sql)
+            result = client.query(sql)
             rows = []
             # 获取列名
             columns = result.column_names
@@ -138,13 +136,12 @@ class ClickHouseClient:
             return rows
         except Exception as e:
             raise RuntimeError(f"❌ SQL 执行失败: {e}")
+        finally:
+            client.close()
 
     def close(self):
-        """关闭连接"""
-        if self.client:
-            self.client.close()
-            self.client = None
-            print("🔌 ClickHouse 连接已关闭")
+        """此方法已弃用，query 每次使用独立连接，会自动关闭。保留以兼容旧代码。"""
+        pass
 
 
 # 示例调用
